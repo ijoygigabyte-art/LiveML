@@ -1,6 +1,6 @@
 import os
 import shutil
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
@@ -34,11 +34,13 @@ import tempfile
 UPLOAD_DIR = os.path.join(tempfile.gettempdir(), "smart_ml_uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+router = APIRouter()
+
 @app.get("/")
 def read_root():
     return {"status": "ok", "message": "Smart ML API is running"}
 
-@app.post("/api/upload")
+@router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
@@ -137,7 +139,7 @@ def prepare_df_and_req(df: pd.DataFrame, req: ProblemRequest) -> pd.DataFrame:
         
     return df[cols_to_keep]
 
-@app.post("/api/problem1")
+@router.post("/problem1")
 def problem1(req: ProblemRequest):
     df = get_df(req.filename)
     df = prepare_df_and_req(df, req)
@@ -163,7 +165,7 @@ def problem1(req: ProblemRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/problem2")
+@router.post("/problem2")
 def problem2(req: ProblemRequest):
     df = get_df(req.filename)
     df = prepare_df_and_req(df, req)
@@ -181,7 +183,7 @@ def problem2(req: ProblemRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/problem3")
+@router.post("/problem3")
 def problem3(req: ProblemRequest):
     # This module returns a statsmodel object, arrays, etc. We will need to serialize them.
     df = get_df(req.filename)
@@ -213,7 +215,7 @@ def problem3(req: ProblemRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/problem4")
+@router.post("/problem4")
 def problem4(req: ProblemRequest):
     df = get_df(req.filename)
     df = prepare_df_and_req(df, req)
@@ -233,7 +235,7 @@ def problem4(req: ProblemRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/problem5")
+@router.post("/problem5")
 def problem5(req: ProblemRequest):
     df = get_df(req.filename)
     df = prepare_df_and_req(df, req)
@@ -247,3 +249,9 @@ def problem5(req: ProblemRequest):
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Mount the router to both the root (for Vercel serverless rewriting) 
+# and /api (for local dev and standard prefixes)
+app.include_router(router)
+app.include_router(router, prefix="/api")
+
