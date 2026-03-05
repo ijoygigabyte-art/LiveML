@@ -122,22 +122,31 @@ def prepare_df_and_req(df: pd.DataFrame, req: ProblemRequest) -> pd.DataFrame:
                     valid_cats.append(c)
                 
     if req.cat_cols:
-        req.cat_cols = [c for c in req.cat_cols if c in valid_cats]
+        req.cat_cols = [c for c in req.cat_cols if c in df.columns]
     else:
         req.cat_cols = valid_cats
         
     if req.num_cols:
-        req.num_cols = [c for c in req.num_cols if c in valid_nums]
+        # Preserve explicitly-sent num_cols, just filter to valid column names
+        req.num_cols = [c for c in req.num_cols if c in df.columns and pd.api.types.is_numeric_dtype(df[c])]
     else:
         req.num_cols = valid_nums
         
-    req.feature_cols = req.cat_cols + req.num_cols
+    if not req.feature_cols:
+        req.feature_cols = req.cat_cols + req.num_cols
+    else:
+        req.feature_cols = [c for c in req.feature_cols if c in df.columns]
     
-    cols_to_keep = req.feature_cols.copy() if req.feature_cols else req.num_cols.copy()
+    cols_to_keep = list(set(req.feature_cols + req.num_cols + req.cat_cols))
     if req.target_col and req.target_col in df.columns and req.target_col not in cols_to_keep:
         cols_to_keep.append(req.target_col)
+
+    # Ensure we have at least some columns
+    if not cols_to_keep:
+        cols_to_keep = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
         
     return df[cols_to_keep]
+
 
 @router.post("/problem1")
 def problem1(req: ProblemRequest):
