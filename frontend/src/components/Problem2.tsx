@@ -17,7 +17,8 @@ export default function Problem2({ filename, featureCols }: Props) {
                 filename,
                 num_cols: featureCols.slice(0, 10) // Just limit to 10 for speed
             };
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/problem2`, req);
+            const apiUrl = import.meta.env.PROD ? '/api' : 'http://localhost:8000/api';
+            const res = await axios.post(`${apiUrl}/problem2`, req);
             setResults(res.data);
         } catch (err) {
             console.error(err);

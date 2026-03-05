@@ -26,7 +26,8 @@ function App() {
     formData.append('file', file);
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/upload`, formData);
+      const apiUrl = import.meta.env.PROD ? '/api' : 'http://localhost:8000/api';
+      const res = await axios.post(`${apiUrl}/upload`, formData);
       setFileData(res.data);
       // Auto-select features (exclude target inside the problem components initially, but provide all for now)
       setFeatureCols(res.data.columns);

@@ -21,7 +21,8 @@ export default function Problem3({ filename, targetCol, featureCols }: Props) {
                 feature_cols: featureCols,
                 num_cols: featureCols.slice(0, 4) // Example: Select first 4 as numerical to standardize
             };
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/problem3`, req);
+            const apiUrl = import.meta.env.PROD ? '/api' : 'http://localhost:8000/api';
+            const res = await axios.post(`${apiUrl}/problem3`, req);
 
             // Transform data for recharts
             const plotData = res.data.plots.y_sampled.map((val: number, i: number) => ({

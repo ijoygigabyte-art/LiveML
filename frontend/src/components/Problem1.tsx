@@ -24,7 +24,8 @@ export default function Problem1({ filename, targetCol, featureCols }: Props) {
                 cat_cols: [] // For simplicity, rely on pandas doing it or not passing it
             };
 
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/problem1`, req);
+            const apiUrl = import.meta.env.PROD ? '/api' : 'http://localhost:8000/api';
+            const res = await axios.post(`${apiUrl}/problem1`, req);
             setResults(res.data);
         } catch (err) {
             console.error(err);

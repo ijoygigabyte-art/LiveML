@@ -24,7 +24,8 @@ export default function Problem4({ filename, targetCol, featureCols }: Props) {
                 iterations
             };
 
-            const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/problem4`, req);
+            const apiUrl = import.meta.env.PROD ? '/api' : 'http://localhost:8000/api';
+            const res = await axios.post(`${apiUrl}/problem4`, req);
 
             // Transform data for line chart
             const plotData = [];
