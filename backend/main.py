@@ -194,35 +194,51 @@ def problem2(req: ProblemRequest):
 
 @router.post("/problem3")
 def problem3(req: ProblemRequest):
-    # This module returns a statsmodel object, arrays, etc. We will need to serialize them.
     df = get_df(req.filename)
     df = prepare_df_and_req(df, req)
+    
+    if not req.target_col:
+        raise HTTPException(status_code=400, detail="Target column required")
+    if not req.feature_cols and not req.num_cols:
+        raise HTTPException(status_code=400, detail="Feature columns required")
+    
+    # Ensure target is numeric
+    if not pd.api.types.is_numeric_dtype(df[req.target_col]):
+        raise HTTPException(status_code=400, detail=f"Target column '{req.target_col}' must be numeric for regression")
+    
     try:
         model, y, y_pred, residuals, mse, rmse, vif_data = run_regression(
             df, req.target_col, req.feature_cols, req.cat_cols, req.num_cols
         )
         
-        # We need to send down samples for the plots since full arrays (17k) are big
-        # Let's take a random sample of 1000 for scatter plots
-        sample_size = min(1000, len(y))
-        indices = np.random.choice(len(y), sample_size, replace=False)
+        # Convert to numpy arrays for consistent indexing
+        y_arr = np.array(y)
+        y_pred_arr = np.array(y_pred)
+        residuals_arr = np.array(residuals)
+        
+        # Sample for plots
+        sample_size = min(1000, len(y_arr))
+        indices = np.random.choice(len(y_arr), sample_size, replace=False)
         
         return clean_data({
             "metrics": {
-                "rsquared": model.rsquared,
-                "rsquared_adj": model.rsquared_adj,
-                "mse": mse,
-                "rmse": rmse
+                "rsquared": float(model.rsquared),
+                "rsquared_adj": float(model.rsquared_adj),
+                "mse": float(mse),
+                "rmse": float(rmse)
             },
             "vif": vif_data.to_dict(orient="records"),
             "plots": {
-                "y_sampled": y.iloc[indices].tolist(),
-                "y_pred_sampled": y_pred.iloc[indices].tolist(),
-                "residuals_sampled": residuals.iloc[indices].tolist()
+                "y_sampled": y_arr[indices].tolist(),
+                "y_pred_sampled": y_pred_arr[indices].tolist(),
+                "residuals_sampled": residuals_arr[indices].tolist()
             }
         })
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Regression failed: {str(e)}")
+
 
 @router.post("/problem4")
 def problem4(req: ProblemRequest):
