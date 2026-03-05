@@ -30,7 +30,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+import tempfile
+UPLOAD_DIR = os.path.join(tempfile.gettempdir(), "smart_ml_uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.get("/")
