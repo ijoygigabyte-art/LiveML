@@ -1,4 +1,12 @@
+import os
+import sys
+
+# Ensure the project root is in the Python path so that
+# `backend.main` can import `modules.*` correctly
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from backend.main import app
 
-# Vercel needs this exact variable name to hook into FastAPI
-# This acts as the serverless function handler for the /api routes
+# Vercel looks for `app` as the ASGI/WSGI handler
