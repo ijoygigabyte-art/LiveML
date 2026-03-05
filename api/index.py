@@ -1,11 +1,11 @@
-from fastapi import FastAPI
+import os
+import sys
 
-app = FastAPI()
+# Add the project root to sys.path so we can import backend and modules
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-@app.get("/api/health")
-def health():
-    return {"status": "ok"}
+from backend.main import app
 
-@app.get("/api/upload")
-def upload_get():
-    return {"message": "Upload endpoint is working. Use POST to upload."}
+# Vercel looks for `app` as the ASGI handler
